@@ -1,0 +1,65 @@
+name: Build & CI Aegis-KernelFW
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build eBPF Kernel & Userspace CLI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install Build Toolchain & eBPF Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            build-essential \
+            clang \
+            llvm \
+            libelf-dev \
+            libbpf-dev \
+            pkg-config \
+            zlib1g-dev \
+            iproute2
+
+      - name: Verify Toolchain
+        run: |
+          echo "=== Compiler Info ==="
+          clang --version
+          gcc --version
+          make --version
+          pkg-config --modversion libbpf || true
+
+      - name: Compile Aegis-KernelFW
+        run: |
+          make clean
+          make all
+
+      - name: Inspect Build Outputs
+        run: |
+          echo "=== Build Artifacts ==="
+          ls -lah build/
+          file build/xdp_fw.bpf.o
+          file build/aegis-fw
+          echo "=== CLI Help Output Test ==="
+          ./build/aegis-fw help
+
+      - name: Upload Compiled Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: aegis-kernelfw-binaries
+          path: |
+            build/xdp_fw.bpf.o
+            build/aegis-fw
+          retention-days: 14
