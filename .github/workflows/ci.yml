@@ -31,7 +31,13 @@ jobs:
             libbpf-dev \
             pkg-config \
             zlib1g-dev \
-            iproute2
+            iproute2 \
+            gcc-multilib \
+            linux-libc-dev
+          # Ensure /usr/include/asm symlink exists for clang bpf cross-compilation
+          if [ ! -d /usr/include/asm ] && [ -d /usr/include/$(uname -m)-linux-gnu/asm ]; then
+            sudo ln -snf /usr/include/$(uname -m)-linux-gnu/asm /usr/include/asm
+          fi
 
       - name: Verify Toolchain
         run: |

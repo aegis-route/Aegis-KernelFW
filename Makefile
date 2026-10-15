@@ -5,14 +5,29 @@ CLANG ?= clang
 LLVM_STRIP ?= llvm-strip
 BPFTOOL ?= bpftool
 
+ARCH ?= $(shell uname -m | sed 's/x86_64/x86/' | sed 's/aarch64/arm64/' | sed 's/ppc64le/powerpc/' | sed 's/mips.*/mips/')
+MULTIARCH ?= $(shell gcc -print-multiarch 2>/dev/null || (uname -m)-linux-gnu)
+
 CFLAGS ?= -O2 -g -Wall -Wextra
-BPF_CFLAGS ?= -O2 -g -Wall -target bpf -D__TARGET_ARCH_x86
+BPF_CFLAGS ?= -O2 -g -Wall -target bpf -D__TARGET_ARCH_$(ARCH)
 
 INC_DIR := include
 SRC_DIR := src
 BPF_DIR := $(SRC_DIR)/bpf
 USER_DIR := $(SRC_DIR)/userspace
 BUILD_DIR := build
+
+# Architecture-specific header include paths for BPF target (resolves <asm/types.h> on Debian/Ubuntu)
+BPF_INCLUDES := -I$(INC_DIR) -I$(BPF_DIR)
+ifneq ($(wildcard /usr/include/$(MULTIARCH)),)
+    BPF_INCLUDES += -I/usr/include/$(MULTIARCH)
+endif
+ifneq ($(wildcard /usr/include/$(shell uname -m)-linux-gnu),)
+    BPF_INCLUDES += -I/usr/include/$(shell uname -m)-linux-gnu
+endif
+ifneq ($(wildcard /usr/include/x86_64-linux-gnu),)
+    BPF_INCLUDES += -I/usr/include/x86_64-linux-gnu
+endif
 
 BPF_SRC := $(BPF_DIR)/xdp_fw.bpf.c
 BPF_OBJ := $(BUILD_DIR)/xdp_fw.bpf.o
@@ -42,7 +57,7 @@ bpf: $(BUILD_DIR) $(BPF_OBJ)
 
 $(BPF_OBJ): $(BPF_SRC) $(INC_DIR)/aegis_types.h $(INC_DIR)/aegis_common.h $(wildcard $(BPF_DIR)/mitigation/*.h)
 	@echo "[CLANG] Compiling eBPF program: $< -> $@"
-	$(CLANG) $(BPF_CFLAGS) -I$(INC_DIR) -I$(BPF_DIR) -c $< -o $@
+	$(CLANG) $(BPF_CFLAGS) $(BPF_INCLUDES) -c $< -o $@
 	@command -v $(LLVM_STRIP) >/dev/null 2>&1 && $(LLVM_STRIP) -g $@ || true
 
 # 2. Compile Userspace Control Plane

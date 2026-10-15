@@ -27,9 +27,16 @@ apt-get install -y \
     pkg-config \
     zlib1g-dev \
     iproute2 \
+    gcc-multilib \
+    linux-libc-dev \
     linux-tools-common \
     linux-tools-generic \
     bpftool 2>/dev/null || true
+
+# Ensure asm header symlink exists for clang bpf cross-compilation
+if [ ! -d /usr/include/asm ] && [ -d /usr/include/$(uname -m)-linux-gnu/asm ]; then
+    ln -snf /usr/include/$(uname -m)-linux-gnu/asm /usr/include/asm
+fi
 
 echo ""
 echo "[✓] Dependencies installed successfully!"
