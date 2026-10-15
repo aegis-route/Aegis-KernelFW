@@ -40,7 +40,7 @@
 /*
  * Version & Metadata
  */
-#define AEGIS_FW_VERSION         "1.1.0-shield"
+#define AEGIS_FW_VERSION         "1.2.0-shield"
 #define AEGIS_FW_PROG_NAME       "xdp_fw"
 
 #endif /* __AEGIS_COMMON_H__ */

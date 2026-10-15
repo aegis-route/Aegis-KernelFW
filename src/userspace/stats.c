@@ -29,6 +29,12 @@ static const char *stat_idx_name(enum aegis_stat_idx idx)
         case STAT_DROPPED_ICMP_FLOOD:   return "[Method 08] ICMP Ping Flood Dropped";
         case STAT_DROPPED_REFLECTED:    return "[Method 09] Reflected Amplification Dropped";
         case STAT_DROPPED_RATE_LIMIT:   return "[Method 10] High PPS Rate-Limit Dropped";
+        case STAT_DROPPED_DNS_PRSD:     return "[Method 11] DNS PRSD / ANY Dropped";
+        case STAT_DROPPED_IPV6_BOGON:   return "[Method 12] IPv6 Bogon / Anomaly Dropped";
+        case STAT_DROPPED_TCP_ANOMALY:  return "[Method 13] TCP Zero-Window / Anomaly Dropped";
+        case STAT_DROPPED_QUIC_FLOOD:   return "[Method 14] QUIC / HTTP/3 Flood Dropped";
+        case STAT_DROPPED_L7_SCANNER:   return "[Method 15] Early L7 HTTP Scanner Dropped";
+        case STAT_DROPPED_TLS_MALFORMED:return "[Method 16] Malformed TLS / Plaintext Dropped";
         case STAT_MATCHED_L4_PASS:      return "[L4 Rule] Explicit Pass";
         case STAT_MATCHED_L4_DROP:      return "[L4 Rule] Explicit Drop";
         case STAT_DEFAULT_PASS:         return "[Policy] Default Pass";

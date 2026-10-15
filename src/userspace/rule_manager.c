@@ -405,6 +405,12 @@ static const struct feature_entry g_features[] = {
     { "icmp-limit",   AEGIS_FEAT_ICMP_LIMIT,        "Method 08: ICMP Ping Flood Rate Limiter" },
     { "reflected",    AEGIS_FEAT_REFLECTED_FILTER,  "Method 09: Reflected Amplification Drop (DNS/NTP)" },
     { "rate-limit",   AEGIS_FEAT_RATE_LIMIT_BAN,    "Method 10: High PPS Rate-Limiting & Dynamic Auto-Ban" },
+    { "dns-protect",  AEGIS_FEAT_DNS_PROTECT,       "Method 11: DNS PRSD & ANY Amplification Drop" },
+    { "ipv6",         AEGIS_FEAT_IPV6_PIPELINE,     "Method 12: Comprehensive IPv6 Defense Pipeline" },
+    { "tcp-anomaly",  AEGIS_FEAT_TCP_ANOMALY,       "Method 13: TCP Zero-Window & Sockstress Mitigation" },
+    { "quic",         AEGIS_FEAT_QUIC_FILTER,       "Method 14: QUIC / HTTP/3 Initial Flood Mitigation" },
+    { "l7-scanner",   AEGIS_FEAT_L7_SCANNER,        "Method 15: Early L7 HTTP Scanner & Exploit Drop" },
+    { "tls-inspect",  AEGIS_FEAT_TLS_INSPECT,       "Method 16: TLS Record Validation & Plaintext Drop" },
 };
 
 int feature_toggle(const char *feat_name, int enable)

@@ -23,12 +23,13 @@ static void print_usage(const char *prog_name)
     printf("  load <iface> [--mode skb|native|offload]    Attach XDP firewall to NIC\n");
     printf("  unload <iface> [--mode skb|native]           Detach XDP firewall from NIC\n\n");
 
-    printf("DEFENSE METHOD TOGGLES (10 Isolated Modules):\n");
-    printf("  feature list                                 Show status of all 10 defense methods\n");
+    printf("DEFENSE METHOD TOGGLES (16 Isolated Modules):\n");
+    printf("  feature list                                 Show status of all 16 defense methods\n");
     printf("  feature enable <method_name|all>             Enable a defense method\n");
     printf("  feature disable <method_name|all>            Disable a defense method\n");
-    printf("    (Methods: malformed, bogon, frag, tcp-flags, syn-flood,\n");
-    printf("              out-of-state, udp-junk, icmp-limit, reflected, rate-limit)\n\n");
+    printf("    (Methods: malformed, bogon, frag, tcp-flags, syn-flood, out-of-state,\n");
+    printf("              udp-junk, icmp-limit, reflected, rate-limit, dns-protect,\n");
+    printf("              ipv6, tcp-anomaly, quic, l7-scanner, tls-inspect)\n\n");
 
     printf("SERVICE PORT PROTECTION (Methods 6 & 7):\n");
     printf("  port allow <tcp|udp> <port>                  Whitelist listening service port\n");

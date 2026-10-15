@@ -6,7 +6,7 @@ Dự án được thiết kế theo kiến trúc **Module hóa độc lập (Iso
 
 ---
 
-## ⚡ 10 Phương thức chống đỡ độc lập (Defense Methods)
+## ⚡ 16 Phương thức chống đỡ độc lập (Defense Methods)
 
 Mỗi phương thức phòng thủ được tách thành một file header riêng biệt trong `src/bpf/mitigation/` và có bộ đếm Metric riêng biệt trong `map_stats`:
 
@@ -22,6 +22,12 @@ Mỗi phương thức phòng thủ được tách thành một file header riên
 | **Method 08** | `mitigation/icmp_flood.h` | **ICMP Ping Flood** | Giới hạn tần suất gói Ping (Echo Request type 8) per-IP bằng sliding window |
 | **Method 09** | `mitigation/reflected.h` | **Reflected Amplification** | Lọc gói phản hồi lạ từ DNS (53), NTP (123), SSDP (1900), Memcached (11211) |
 | **Method 10** | `mitigation/rate_limit.h` | **High PPS & Dynamic Ban** | Token Bucket đo PPS per-IP; tự động ban IP vi phạm vào `map_dynamic_ban` (60s - 300s) |
+| **Method 11** | `mitigation/dns_protect.h` | **DNS PRSD / ANY Flood** | Chặn DNS Water Torture (PRSD subdomain dài > 45 ký tự) & Drop truy vấn Type ANY (255) |
+| **Method 12** | `mitigation/ipv6_pipeline.h` | **IPv6 Bogon & Anomalies** | Kiểm tra IPv6 Bogon (`::/128`, `::1`, multicast source, link-local WAN, fragment) |
+| **Method 13** | `mitigation/tcp_anomaly.h` | **TCP Zero-Window / Sockstress** | Chặn gói TCP Window = 0 không payload và gói 1-byte PSH spam gây nghẽn socket |
+| **Method 14** | `mitigation/quic_flood.h` | **QUIC / HTTP/3 Flood** | Bắt buộc gói QUIC Initial UDP 443 đạt $\ge 1200$ bytes theo RFC 9000, drop gói tiny giả mạo |
+| **Method 15** | `mitigation/l7_scanner.h` | **Early L7 HTTP Scanner** | Nhận diện chuỗi scan sớm (`/.env`, `/wp-`, `/xmlrpc`, `/phpmyadmin`) và drop trước Web Server |
+| **Method 16** | `mitigation/tls_sni.h` | **Malformed TLS / Plaintext** | Chặn request plaintext HTTP gửi vào port 443 và drop TLS Record handshake giả mạo |
 
 ---
 
@@ -35,13 +41,13 @@ Aegis-KernelFW/
 │   └── rules.example.conf            # Cấu hình mẫu
 ├── include/
 │   ├── aegis_common.h                # Pinned map paths, tune limits
-│   └── aegis_types.h                 # Struct, feature flags, 18 distinct stat indices
+│   └── aegis_types.h                 # Struct, feature flags, 24 distinct stat indices
 ├── scripts/
 │   ├── setup_deps.sh                 # Cài đặt Clang, LLVM, LibBPF
 │   └── test_traffic.sh               # Tạo mạng ảo veth + netns để test cô lập an toàn
 └── src/
     ├── bpf/
-    │   ├── mitigation/               # 10 MODULE PHÒNG THỦ ĐỘC LẬP
+    │   ├── mitigation/               # 16 MODULE PHÒNG THỦ ĐỘC LẬP
     │   │   ├── malformed.h           # Method 01: Malformed & short packet
     │   │   ├── bogon.h               # Method 02: Bogon, loopback, Land attack
     │   │   ├── frag.h                # Method 03: Fragmented packet (MF / offset)
@@ -51,8 +57,14 @@ Aegis-KernelFW/
     │   │   ├── udp_junk.h            # Method 07: UDP closed port junk
     │   │   ├── icmp_flood.h          # Method 08: ICMP ping flood limiter
     │   │   ├── reflected.h           # Method 09: Reflected amplification flood
-    │   │   └── rate_limit.h          # Method 10: High PPS rate limit & Dynamic Ban
-    │   └── xdp_fw.bpf.c              # Core XDP Hook: điều phối tuần tự 10 module
+    │   │   ├── rate_limit.h          # Method 10: High PPS rate limit & Dynamic Ban
+    │   │   ├── dns_protect.h         # Method 11: DNS Water Torture (PRSD) & ANY flood
+    │   │   ├── ipv6_pipeline.h       # Method 12: Comprehensive IPv6 Defense Pipeline
+    │   │   ├── tcp_anomaly.h         # Method 13: TCP Zero-Window & Sockstress
+    │   │   ├── quic_flood.h          # Method 14: QUIC / HTTP/3 Initial Flood Mitigation
+    │   │   ├── l7_scanner.h          # Method 15: Early L7 HTTP Scanner & Exploit Drop
+    │   │   └── tls_sni.h             # Method 16: TLS Record Validation & Plaintext Drop
+    │   └── xdp_fw.bpf.c              # Core XDP Hook: điều phối tuần tự 16 module
     └── userspace/
         ├── loader.c / .h             # Nạp/gỡ XDP và Pin toàn bộ BPF Maps
         ├── rule_manager.c / .h       # Bật/tắt method, Whitelist port, Dynamic ban, CIDR

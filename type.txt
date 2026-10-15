@@ -1,0 +1,36 @@
+UDP Flood | can
+UDP Fragmentation Flood | can
+UDP Amplification | can
+CharGEN Flood | can
+ICMP (Ping) Flood | can
+ICMP Fragmentation Flood | can
+Misused Application Attack | can
+IP Null Attack | can
+TCP Flood | can
+SYN Flood | can
+SYN-ACK Flood | can
+ACK Flood | can
+ACK Fragmentation Flood | can
+RST/FIN Flood | can
+Multiple ACK Spoofed Session Flood | can
+Multiple SYN-ACK Spoofed Session Flood | can
+Synonymous IP Attack | can
+Session Attack | can
+Slowloris | not
+Ping of Death | can
+Smurf Attack | can
+Fraggle Attack | can
+LOIC Attack | can
+HOIC Attack | can
+HTTP Flood | not
+GET Attack | not
+POST Attack | not
+Slow POST (R.U.D.Y.) | not
+One-session / One-request Attack | not
+HTTP Fragmentation | not
+Recursive GET Flood | not
+Random Recursive GET Flood | not
+ReDoS (Regular Expression Denial of Service) | not
+Advanced Persistent DoS (APDoS) | not
+Multi-Vector Attacks | can
+Zero-Day DDoS Attacks | not

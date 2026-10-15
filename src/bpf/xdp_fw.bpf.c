@@ -2,7 +2,7 @@
 /*
  * Aegis-KernelFW: Multi-Method High-Performance XDP/eBPF Firewall
  *
- * Implements 10 distinct, individually isolated defense methods:
+ * Implements 16 distinct, individually isolated defense methods:
  *   Method 1:  Malformed & Truncated packet check
  *   Method 2:  Bogon, Spoofed IP & Land attack (src==dst)
  *   Method 3:  Fragmented packet drop (MF / offset > 0)
@@ -13,6 +13,12 @@
  *   Method 8:  ICMP Ping flood limiter
  *   Method 9:  Reflected amplification flood drop (DNS/NTP/SSDP)
  *   Method 10: High PPS token bucket rate-limiting & Dynamic Auto-Ban
+ *   Method 11: DNS Water Torture (PRSD) & ANY amplification drop
+ *   Method 12: Comprehensive IPv6 defense pipeline & Bogon drop
+ *   Method 13: TCP Anomaly & Sockstress / Zero-Window drop
+ *   Method 14: QUIC / HTTP/3 Initial tiny flood mitigation
+ *   Method 15: Early L7 HTTP Scanner & Exploit probe drop
+ *   Method 16: TLS Record Validation & Plaintext scanner drop
  */
 
 #include <linux/bpf.h>
@@ -20,9 +26,11 @@
 #include <bpf/bpf_endian.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
+#include <linux/ipv6.h>
 #include <linux/tcp.h>
 #include <linux/udp.h>
 #include <linux/icmp.h>
+#include <linux/icmpv6.h>
 #include <linux/in.h>
 
 #include "aegis_types.h"
@@ -39,6 +47,12 @@
 #include "mitigation/icmp_flood.h"
 #include "mitigation/reflected.h"
 #include "mitigation/rate_limit.h"
+#include "mitigation/dns_protect.h"
+#include "mitigation/ipv6_pipeline.h"
+#include "mitigation/tcp_anomaly.h"
+#include "mitigation/quic_flood.h"
+#include "mitigation/l7_scanner.h"
+#include "mitigation/tls_sni.h"
 
 /*
  * BPF Maps Definition
@@ -176,6 +190,18 @@ int aegis_xdp_firewall(struct xdp_md *ctx)
         nh = (void *)(vlan_hdr + 1);
     }
 
+    /* METHOD 12: Comprehensive IPv6 Defense Pipeline */
+    if (h_proto == bpf_htons(ETH_P_IPV6)) {
+        if (features & AEGIS_FEAT_IPV6_PIPELINE) {
+            struct ipv6hdr *ip6h = nh;
+            if (is_ipv6_abusive(data, data_end, ip6h)) {
+                record_stat(STAT_DROPPED_IPV6_BOGON, pkt_bytes);
+                return XDP_DROP;
+            }
+        }
+        return XDP_PASS;
+    }
+
     /* Pass non-IPv4 traffic (ARP, etc.) */
     if (h_proto != bpf_htons(ETH_P_IP)) {
         return XDP_PASS;
@@ -266,6 +292,16 @@ int aegis_xdp_firewall(struct xdp_md *ctx)
             }
         }
 
+        /* METHOD 13: TCP Anomaly & Sockstress / Zero-Window */
+        if (features & AEGIS_FEAT_TCP_ANOMALY) {
+            __u16 tot_ip_len = bpf_ntohs(iph->tot_len);
+            __u32 ip_payload_len = tot_ip_len > ip_hdr_len ? (tot_ip_len - ip_hdr_len) : 0;
+            if (is_tcp_anomaly(data_end, tcph, ip_payload_len)) {
+                record_stat(STAT_DROPPED_TCP_ANOMALY, pkt_bytes);
+                return XDP_DROP;
+            }
+        }
+
         /* METHOD 5: TCP SYN Flood Rate Limiting */
         if (features & AEGIS_FEAT_SYN_FLOOD_PROTECT) {
             if (is_syn_flood(&map_rate_limit, saddr, tcph, max_syn)) {
@@ -278,6 +314,22 @@ int aegis_xdp_firewall(struct xdp_md *ctx)
         if (features & AEGIS_FEAT_OUT_OF_STATE) {
             if (is_tcp_out_of_state(&map_open_tcp_ports, tcph)) {
                 record_stat(STAT_DROPPED_OUT_OF_STATE, pkt_bytes);
+                return XDP_DROP;
+            }
+        }
+
+        /* METHOD 15: Early L7 HTTP Scanner & Exploit Probe */
+        if (features & AEGIS_FEAT_L7_SCANNER) {
+            if (is_l7_scanner(data_end, tcph)) {
+                record_stat(STAT_DROPPED_L7_SCANNER, pkt_bytes);
+                return XDP_DROP;
+            }
+        }
+
+        /* METHOD 16: TLS Record Validation & Plaintext Scanner Drop */
+        if (features & AEGIS_FEAT_TLS_INSPECT) {
+            if (is_tls_malformed(data_end, tcph)) {
+                record_stat(STAT_DROPPED_TLS_MALFORMED, pkt_bytes);
                 return XDP_DROP;
             }
         }
@@ -296,6 +348,22 @@ int aegis_xdp_firewall(struct xdp_md *ctx)
         if (features & AEGIS_FEAT_REFLECTED_FILTER) {
             if (is_reflected_flood(udph)) {
                 record_stat(STAT_DROPPED_REFLECTED, pkt_bytes);
+                return XDP_DROP;
+            }
+        }
+
+        /* METHOD 11: DNS Water Torture (PRSD) & ANY Amplification */
+        if (features & AEGIS_FEAT_DNS_PROTECT) {
+            if (is_dns_abuse(data_end, udph)) {
+                record_stat(STAT_DROPPED_DNS_PRSD, pkt_bytes);
+                return XDP_DROP;
+            }
+        }
+
+        /* METHOD 14: QUIC / HTTP/3 Initial Flood Mitigation */
+        if (features & AEGIS_FEAT_QUIC_FILTER) {
+            if (is_quic_flood(data_end, udph)) {
+                record_stat(STAT_DROPPED_QUIC_FLOOD, pkt_bytes);
                 return XDP_DROP;
             }
         }

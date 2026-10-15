@@ -38,8 +38,14 @@ enum aegis_proto {
 #define AEGIS_FEAT_ICMP_LIMIT         (1U << 7)  /* Method 8: ICMP Ping flood limiter */
 #define AEGIS_FEAT_REFLECTED_FILTER   (1U << 8)  /* Method 9: Reflected amplification flood (DNS/NTP) */
 #define AEGIS_FEAT_RATE_LIMIT_BAN     (1U << 9)  /* Method 10: High PPS token bucket & Dynamic ban */
+#define AEGIS_FEAT_DNS_PROTECT        (1U << 10) /* Method 11: DNS PRSD & ANY amplification drop */
+#define AEGIS_FEAT_IPV6_PIPELINE      (1U << 11) /* Method 12: Comprehensive IPv6 defense pipeline */
+#define AEGIS_FEAT_TCP_ANOMALY        (1U << 12) /* Method 13: TCP Zero-window & Sockstress drop */
+#define AEGIS_FEAT_QUIC_FILTER        (1U << 13) /* Method 14: QUIC / HTTP/3 Initial flood drop */
+#define AEGIS_FEAT_L7_SCANNER         (1U << 14) /* Method 15: Early L7 HTTP scanner & exploit probe */
+#define AEGIS_FEAT_TLS_INSPECT        (1U << 15) /* Method 16: TLS record validation & plaintext drop */
 
-#define AEGIS_FEAT_ALL                (0x3FF)    /* Enable all 10 defense methods */
+#define AEGIS_FEAT_ALL                (0xFFFF)   /* Enable all 16 defense methods */
 
 /*
  * Statistical Metric Indices (Per-CPU Array Map)
@@ -60,6 +66,12 @@ enum aegis_stat_idx {
     STAT_DROPPED_ICMP_FLOOD,       /* Method 8: ICMP ping flood drop */
     STAT_DROPPED_REFLECTED,        /* Method 9: Reflected amplification drop */
     STAT_DROPPED_RATE_LIMIT,       /* Method 10a: High PPS rate-limit drop */
+    STAT_DROPPED_DNS_PRSD,         /* Method 11: DNS PRSD / ANY drop */
+    STAT_DROPPED_IPV6_BOGON,       /* Method 12: IPv6 Bogon / Malformed drop */
+    STAT_DROPPED_TCP_ANOMALY,      /* Method 13: TCP Zero-Window / Anomaly drop */
+    STAT_DROPPED_QUIC_FLOOD,       /* Method 14: QUIC / HTTP/3 flood drop */
+    STAT_DROPPED_L7_SCANNER,       /* Method 15: Early L7 HTTP scanner drop */
+    STAT_DROPPED_TLS_MALFORMED,    /* Method 16: Malformed TLS / Plaintext drop */
     STAT_MATCHED_L4_PASS,          /* Passed by explicit L4 rule */
     STAT_MATCHED_L4_DROP,          /* Dropped by explicit L4 rule */
     STAT_DEFAULT_PASS,             /* Passed by default policy */
