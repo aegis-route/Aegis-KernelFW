@@ -14,7 +14,13 @@
  */
 static __always_inline int is_udp_junk(void *open_udp_ports_map, struct udphdr *udph)
 {
+    __u16 src_port = bpf_ntohs(udph->source);
     __u16 dest_port = udph->dest;
+
+    /* Whitelist legitimate outbound return traffic (DNS, NTP, DoT, QUIC, DHCP) */
+    if (src_port == 53 || src_port == 123 || src_port == 853 || src_port == 443 || src_port == 67 || src_port == 68) {
+        return 0;
+    }
 
     __u32 *is_open = bpf_map_lookup_elem(open_udp_ports_map, &dest_port);
     if (!is_open || *is_open == 0) {
