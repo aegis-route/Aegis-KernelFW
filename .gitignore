@@ -16,3 +16,7 @@ aegis-fw
 # Logs & temp files
 *.log
 /tmp/
+
+# Python
+__pycache__/
+*.py[cod]

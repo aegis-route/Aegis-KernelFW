@@ -1,0 +1,39 @@
+{
+  "dataset": {
+    "total_samples": 5000,
+    "train_samples": 3750,
+    "test_samples": 1250,
+    "benign_count": 3246,
+    "malicious_count": 1754
+  },
+  "random_forest_metrics": {
+    "confusion_matrix": {
+      "true_negative": 810,
+      "false_positive": 2,
+      "false_negative": 6,
+      "true_positive": 432
+    },
+    "accuracy": 99.36,
+    "precision": 99.54,
+    "recall": 98.63,
+    "f1_score": 99.08,
+    "roc_auc": 0.9926,
+    "false_positive_rate_percent": 0.25,
+    "false_negative_rate_percent": 1.37
+  },
+  "isolation_forest_metrics": {
+    "accuracy": 87.44,
+    "f1_score": 81.46
+  },
+  "feature_importances": {
+    "flow_duration_ms": 0.0077,
+    "packet_count": 0.4493,
+    "byte_count": 0.1696,
+    "pps": 0.0772,
+    "bytes_per_pkt": 0.0182,
+    "syn_ratio": 0.006,
+    "ack_ratio": 0.0176,
+    "src_ip_entropy": 0.0832,
+    "dst_port_entropy": 0.1712
+  }
+}
